@@ -7,7 +7,7 @@ GREEN, AMBER, RED = "green", "amber", "red"
 
 # ACGIH TLV screening limits (deg C WBGT, acclimatised workers) for the share of
 # each hour spent working: 75-100 %, 50-75 %, 25-50 %. Above the last value work stops.
-# Heavy/continuous has no value in the current table; 26.0 is from the 2006 edition.
+# The table has no value for heavy work at 75-100 %; 26.0 is our own cautious figure.
 LIMITS = {
     LIGHT: (31.0, 31.0, 32.0),
     MODERATE: (28.0, 29.0, 30.0),
@@ -16,6 +16,11 @@ LIMITS = {
 
 # Minutes of work per hour planned for each band (the cautious end of each range).
 WORK_MINUTES = (50, 30, 15)
+
+# WBGT here is estimated from weather data, not measured on site, so each hour is judged
+# as if it were this much hotter. Tonouchi and Ono report a standard deviation of 0.4 C
+# against measured WBGT with observed weather and 1.5 C with model data.
+MARGIN_C = 1.0
 
 
 def wbgt_c(temp_c, rh_pct, solar_wm2, wind_ms):
@@ -32,10 +37,10 @@ def wbgt_c(temp_c, rh_pct, solar_wm2, wind_ms):
     )
 
 
-def classify(wbgt, workload):
+def classify(wbgt, workload, margin=MARGIN_C):
     """Return (level, work minutes per hour) for one hour."""
     for limit, minutes in zip(LIMITS[workload], WORK_MINUTES):
-        if wbgt <= limit:
+        if wbgt + margin <= limit:
             return (GREEN if minutes == WORK_MINUTES[0] else AMBER), minutes
     return RED, 0
 

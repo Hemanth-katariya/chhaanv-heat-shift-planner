@@ -1,12 +1,13 @@
 import sys
 import unittest
+from math import atan
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 from heatplan import briefing  # noqa: E402
 from heatplan.planner import plan_day  # noqa: E402
-from heatplan.wbgt import AMBER, GREEN, RED, classify, wbgt_c  # noqa: E402
+from heatplan.wbgt import AMBER, GREEN, LIMITS, MARGIN_C, RED, classify, wbgt_c  # noqa: E402
 
 
 def day(temps, rh=20, wind=2.0):
@@ -26,15 +27,52 @@ class WbgtTest(unittest.TestCase):
         # 30 C at 70 % RH has a wet bulb near 25.5 C, so indoor WBGT is about 26.9 C.
         self.assertAlmostEqual(wbgt_c(30, 70, 0, 1), 26.9, delta=0.5)
 
+    def test_shade_values_track_wet_bulb_physics(self):
+        # Independent check: indoor WBGT = 0.7 * wet bulb + 0.3 * air, wet bulb from Stull (2011).
+        def wet_bulb(t, rh):
+            return (
+                t * atan(0.151977 * (rh + 8.313659) ** 0.5)
+                + atan(t + rh)
+                - atan(rh - 1.676331)
+                + 0.00391838 * rh**1.5 * atan(0.023101 * rh)
+                - 4.686035
+            )
+
+        for t in (25, 30, 35, 40, 44):
+            for rh in (15, 30, 50, 70, 90):
+                diff = wbgt_c(t, rh, 0, 1) - (0.7 * wet_bulb(t, rh) + 0.3 * t)
+                self.assertLess(abs(diff), 1.3, (t, rh))
+                # Any under-estimate must stay inside the safety margin.
+                self.assertGreater(diff, -MARGIN_C, (t, rh))
+
     def test_sun_and_humidity_raise_it(self):
         self.assertGreater(wbgt_c(35, 40, 800, 1), wbgt_c(35, 40, 0, 1))
         self.assertGreater(wbgt_c(35, 70, 0, 1), wbgt_c(35, 40, 0, 1))
 
-    def test_bands(self):
+    def test_limits_match_the_acgih_screening_table(self):
+        # TLV column, acclimatised workers: 75-100 %, 50-75 %, 25-50 % of each hour working.
+        self.assertEqual(LIMITS["light"], (31.0, 31.0, 32.0))
+        self.assertEqual(LIMITS["moderate"], (28.0, 29.0, 30.0))
+        self.assertEqual(LIMITS["heavy"][1:], (27.5, 29.0))
+        # The table has no heavy value for 75-100 %, so ours must not be looser than the next band.
+        self.assertLess(LIMITS["heavy"][0], LIMITS["heavy"][1])
+
+    def test_bands_without_margin_follow_the_table(self):
+        self.assertEqual(classify(28.0, "moderate", margin=0), (GREEN, 50))
+        self.assertEqual(classify(29.0, "moderate", margin=0), (AMBER, 30))
+        self.assertEqual(classify(30.0, "moderate", margin=0), (AMBER, 15))
+        self.assertEqual(classify(30.1, "moderate", margin=0), (RED, 0))
+        self.assertEqual(classify(31.0, "light", margin=0), (GREEN, 50))
+        self.assertEqual(classify(32.0, "light", margin=0), (AMBER, 15))
+        self.assertEqual(classify(27.5, "heavy", margin=0), (AMBER, 30))
+        self.assertEqual(classify(29.1, "heavy", margin=0), (RED, 0))
+
+    def test_bands_are_one_degree_stricter_by_default(self):
+        self.assertEqual(MARGIN_C, 1.0)
         self.assertEqual(classify(27.0, "moderate"), (GREEN, 50))
-        self.assertEqual(classify(28.5, "moderate"), (AMBER, 30))
-        self.assertEqual(classify(29.5, "moderate"), (AMBER, 15))
-        self.assertEqual(classify(30.5, "moderate"), (RED, 0))
+        self.assertEqual(classify(27.5, "moderate"), (AMBER, 30))
+        self.assertEqual(classify(28.5, "moderate"), (AMBER, 15))
+        self.assertEqual(classify(29.5, "moderate"), (RED, 0))
         self.assertEqual(classify(27.0, "heavy")[0], AMBER)
 
 

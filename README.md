@@ -22,7 +22,16 @@ No AI is involved in the safety numbers.
 1. Hourly temperature, humidity, wind and solar radiation come from [Open-Meteo](https://open-meteo.com) (free, no key).
 2. Heat stress is estimated as wet-bulb globe temperature (WBGT) with the Ono and Tonouchi (2014) formula, in [backend/heatplan/wbgt.py](backend/heatplan/wbgt.py).
 3. Each hour is compared with ACGIH work/rest screening limits for light, moderate or heavy work.
-4. The planner in [backend/heatplan/planner.py](backend/heatplan/planner.py) picks up to two work blocks, eight hours in total, that avoid every stop hour and give the most safe working time.
+4. Because the WBGT is an estimate, every hour is judged 1 °C stricter than those limits.
+5. The planner in [backend/heatplan/planner.py](backend/heatplan/planner.py) picks up to two work blocks, eight hours in total, that avoid every stop hour and give the most safe working time.
+
+### How the numbers were checked
+
+- **Work/rest limits.** The light and moderate rows, and the heavy row for 50-75 % and 25-50 % work, match the ACGIH TLV screening table for acclimatised workers as reproduced by [CCOHS](https://ccohs.ca/oshanswers/phys_agents/heat_control.html). The table gives no value for heavy work at 75-100 %; the 26.0 °C used there is our own cautious figure.
+- **WBGT formula.** We could not open the original paper, so the coefficients are not confirmed against it. As an independent check, the formula's shade values were compared with WBGT computed from wet-bulb temperature (Stull 2011) for 25-44 °C and 15-90 % humidity. They agree within 1.2 °C, and the formula never reads more than 0.7 °C low.
+- **Safety margin.** The 1 °C margin covers that gap. The formula's authors report a standard deviation of 0.4 °C against measured WBGT with observed weather and 1.5 °C with model data ([Tonouchi and Ono](https://ams.confex.com/ams/91Annual/webprogram/Paper181591.html)).
+
+The tests in [tests/test_planner.py](tests/test_planner.py) lock all three.
 
 The AI agent only words the spoken briefing. Its output is rejected, and fixed wording is used instead, if any time or quantity from the plan is missing.
 
@@ -74,7 +83,7 @@ New AWS accounts cannot create CloudFront distributions until AWS has verified t
 
 ## Limits
 
-- WBGT is estimated from forecast data, not measured on site with a globe thermometer.
+- WBGT is estimated from forecast data, not measured on site with a globe thermometer. The app says so under every plan.
 - The limits assume workers who are used to the heat and wear normal work clothes.
 - It is a planning aid. It does not replace first aid or a supervisor's judgement.
 

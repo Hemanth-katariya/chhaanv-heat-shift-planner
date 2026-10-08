@@ -60,7 +60,7 @@ const STR = {
     detail: "{from}–{to}: {temp}°C, humidity {rh}%, wind {wind} m/s. Heat stress (WBGT) {wbgt}°C. {advice}",
     adviceWork: "Work {w} min, rest {r} min in the shade.",
     adviceStop: "Stop work in the sun.",
-    method: "Heat stress is WBGT, estimated from temperature, humidity, wind and sunshine (Open-Meteo). For {workload} work: safe up to {a}°C, stop above {b}°C (ACGIH limits).",
+    method: "Heat stress (WBGT) is an estimate from weather data: temperature, humidity, wind and sunshine (Open-Meteo). It is not measured on site, so each hour is judged {m}°C stricter than the ACGIH limits. For {workload} work: safe up to {a}°C, stop above {b}°C.",
     thHour: "Hour", thTemp: "Temp", thRh: "Humidity", thWbgt: "WBGT", thStatus: "Status", thWork: "Work / rest",
     statusGreen: "Safe", statusAmber: "Caution", statusRed: "Stop",
     restWater: "Rest and water",
@@ -148,7 +148,7 @@ const STR = {
     detail: "{from}–{to}: {temp}°C, नमी {rh}%, हवा {wind} मी/से। गर्मी का दबाव (WBGT) {wbgt}°C। {advice}",
     adviceWork: "{w} मिनट काम, {r} मिनट छाँव में आराम।",
     adviceStop: "धूप में काम रोकें।",
-    method: "गर्मी का दबाव WBGT है, जो तापमान, नमी, हवा और धूप से निकाला गया है (Open-Meteo)। {workload} काम के लिए: {a}°C तक सुरक्षित, {b}°C से ऊपर काम बंद (ACGIH सीमा)।",
+    method: "गर्मी का दबाव (WBGT) मौसम के आँकड़ों से निकाला गया अनुमान है: तापमान, नमी, हवा और धूप (Open-Meteo)। यह साइट पर नापा नहीं गया है, इसलिए हर घंटे को ACGIH सीमा से {m}°C सख़्त परखा गया है। {workload} काम के लिए: {a}°C तक सुरक्षित, {b}°C से ऊपर काम बंद।",
     thHour: "घंटा", thTemp: "तापमान", thRh: "नमी", thWbgt: "WBGT", thStatus: "स्थिति", thWork: "काम / आराम",
     statusGreen: "सुरक्षित", statusAmber: "सावधान", statusRed: "रोकें",
     restWater: "आराम और पानी",
@@ -421,7 +421,13 @@ function render() {
       el("td", {}, `${MARK[h.level]} ${t(`status${h.level[0].toUpperCase()}${h.level.slice(1)}`)}`),
       el("td", {}, h.work_min ? `${h.work_min} / ${60 - h.work_min}` : "0 / 60")))),
   );
-  $("method").textContent = t("method", { workload: t(plan.workload), a: plan.limits_wbgt_c[0], b: plan.limits_wbgt_c[2] });
+  const margin = plan.margin_c || 0;
+  $("method").textContent = t("method", {
+    workload: t(plan.workload),
+    m: margin,
+    a: plan.limits_wbgt_c[0] - margin,
+    b: plan.limits_wbgt_c[2] - margin,
+  });
 
   /* rest and water */
   $("waterEach").textContent = t("litres", { n: day.water_l_per_worker });

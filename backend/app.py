@@ -6,7 +6,7 @@ import os
 from heatplan import briefing, sites
 from heatplan.planner import plan_day
 from heatplan.weather import REPLAY_DATE, fetch_two_days
-from heatplan.wbgt import LIMITS, WORKLOADS
+from heatplan.wbgt import LIMITS, MARGIN_C, WORKLOADS
 
 WHEN = ("today", "tomorrow")
 
@@ -46,6 +46,7 @@ def build_plan(lat, lon, workload, replay, site="the site"):
         "timezone": timezone,
         "workload": workload,
         "limits_wbgt_c": LIMITS[workload],
+        "margin_c": MARGIN_C,
         "replay_date": REPLAY_DATE if replay else None,
         "days": out,
     }
