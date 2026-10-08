@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chhaanv - heat-safe shift planner</title>
+  <meta name="description" content="Hour-by-hour heat-safe work shifts for construction crews, with a Hindi voice briefing.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d5c63'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23fab219'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">छाँ</span>
+      <div>
+        <h1>Chhaanv <span class="hi-name">छाँव</span></h1>
+        <p data-i18n="tagline"></p>
+      </div>
+    </div>
+    <button id="lang" class="ghost" type="button" aria-label="Switch language"></button>
+  </header>
+
+  <main>
+    <section id="saved" class="saved" hidden>
+      <h2 data-i18n="savedSites"></h2>
+      <ul id="savedList"></ul>
+    </section>
+
+    <form id="form" class="card" autocomplete="off">
+      <div class="field">
+        <label for="place" data-i18n="where"></label>
+        <div class="row">
+          <input id="place" type="search" required data-i18n-placeholder="wherePh" aria-describedby="placeStatus">
+          <button id="locate" class="ghost" type="button" data-i18n="useLocation"></button>
+        </div>
+        <ul id="suggest" class="suggest" hidden></ul>
+        <p id="placeStatus" class="hint" aria-live="polite"></p>
+      </div>
+
+      <div class="field">
+        <label for="site" data-i18n="siteName"></label>
+        <input id="site" type="text" maxlength="80" data-i18n-placeholder="siteNamePh">
+      </div>
+
+      <fieldset class="field">
+        <legend data-i18n="workload"></legend>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="workload" value="light"><span><b data-i18n="light"></b><small data-i18n="lightEg"></small></span></label>
+          <label class="choice"><input type="radio" name="workload" value="moderate" checked><span><b data-i18n="moderate"></b><small data-i18n="moderateEg"></small></span></label>
+          <label class="choice"><input type="radio" name="workload" value="heavy"><span><b data-i18n="heavy"></b><small data-i18n="heavyEg"></small></span></label>
+        </div>
+      </fieldset>
+
+      <div class="field narrow">
+        <label for="crew" data-i18n="crew"></label>
+        <input id="crew" type="number" min="1" max="2000" value="20" inputmode="numeric" required>
+      </div>
+
+      <label class="check">
+        <input id="replay" type="checkbox">
+        <span><b data-i18n="replay"></b><small data-i18n="replayHint"></small></span>
+      </label>
+
+      <button id="go" class="primary" type="submit" data-i18n="makePlan"></button>
+      <p id="error" class="error" role="alert" hidden></p>
+    </form>
+
+    <section id="result" hidden>
+      <div class="tabs" role="tablist">
+        <button role="tab" type="button" data-day="0" aria-selected="true"></button>
+        <button role="tab" type="button" data-day="1" aria-selected="false"></button>
+      </div>
+
+      <article class="card shift">
+        <p class="eyebrow" id="shiftEyebrow"></p>
+        <p class="shift-times" id="shiftTimes"></p>
+        <p class="shift-stop" id="shiftStop"></p>
+        <div class="compare" id="compare"></div>
+      </article>
+
+      <article class="card">
+        <h2 data-i18n="hourByHour"></h2>
+        <div class="chart">
+          <div id="strip" class="strip"></div>
+          <div id="workbar" class="workbar" aria-hidden="true"></div>
+        </div>
+        <p id="detail" class="detail" aria-live="polite"></p>
+        <ul class="legend">
+          <li><span class="key green">&#10003;</span><span data-i18n="legendGreen"></span></li>
+          <li><span class="key amber">!</span><span data-i18n="legendAmber"></span></li>
+          <li><span class="key red">&#10005;</span><span data-i18n="legendRed"></span></li>
+          <li><span class="key planned"></span><span data-i18n="legendWork"></span></li>
+        </ul>
+        <details>
+          <summary data-i18n="showTable"></summary>
+          <div class="table-wrap"><table id="table"></table></div>
+        </details>
+        <p class="hint" id="method"></p>
+      </article>
+
+      <article class="card">
+        <h2 data-i18n="restWater"></h2>
+        <div class="tiles">
+          <div class="tile"><span class="tile-label" data-i18n="waterEach"></span><span class="tile-value" id="waterEach"></span></div>
+          <div class="tile"><span class="tile-label" id="waterCrewLabel"></span><span class="tile-value" id="waterCrew"></span></div>
+          <div class="tile"><span class="tile-label" data-i18n="restEach"></span><span class="tile-value" id="restEach"></span></div>
+        </div>
+        <p class="hint" data-i18n="waterRule"></p>
+      </article>
+
+      <article class="card">
+        <div class="head-row">
+          <h2 data-i18n="briefing"></h2>
+          <div class="seg" role="group" data-i18n-aria="briefingLang">
+            <button type="button" data-blang="hi" aria-pressed="true">हिंदी</button>
+            <button type="button" data-blang="en" aria-pressed="false">English</button>
+          </div>
+        </div>
+        <p class="hint" data-i18n="briefingHint"></p>
+        <blockquote id="script" class="script"></blockquote>
+        <p id="scriptSource" class="hint"></p>
+        <div class="actions">
+          <button id="play" class="primary" type="button"></button>
+          <a id="whatsapp" class="button whatsapp" target="_blank" rel="noopener" data-i18n="whatsapp"></a>
+          <button id="copy" class="ghost" type="button" data-i18n="copy"></button>
+        </div>
+      </article>
+
+      <div class="save-row">
+        <button id="save" class="ghost" type="button" data-i18n="saveSite"></button>
+        <p id="saveStatus" class="hint" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p data-i18n="footer"></p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
