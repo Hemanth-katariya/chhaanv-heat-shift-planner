@@ -1,6 +1,6 @@
 # Chhaanv (छाँव) - heat-safe shift planner
 
-Built for Environmental Hacks, Track 02: Heat and Water.
+Built for Environmental Hacks, Track 02: Heat and Water. [Demo video](https://youtu.be/ouxjoENJtf8) · [Live app](https://er15mg1dc8.execute-api.ap-south-1.amazonaws.com)
 
 A construction site supervisor enters where the site is and how heavy the work is. Chhaanv returns an hour-by-hour plan for today and tomorrow:
 
