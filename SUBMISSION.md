@@ -39,3 +39,4 @@ AWS services: Lambda and API Gateway (SAM), DynamoDB for saved sites, EventBridg
 - Repo: https://github.com/Hemanth-katariya/chhaanv-heat-shift-planner
 - Live app: https://er15mg1dc8.execute-api.ap-south-1.amazonaws.com
 - Video: https://youtu.be/ouxjoENJtf8
+- Blog: https://builder.aws.com/content/3KT0I9ErCfuwp9AIaeSPAgfS40m/chhaanv-turning-avoid-the-midday-sun-into-a-heat-safe-shift-schedule
