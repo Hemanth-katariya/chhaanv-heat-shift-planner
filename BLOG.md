@@ -8,7 +8,7 @@ Chhaanv (छाँव, "shade") answers that for one supervisor and one site. Yo
 
 For a moderate-work crew in Delhi on 19 May 2026 (44 °C), the usual 9-to-5 shift has zero safe working time and eight unsafe hours. Chhaanv moves it to 05:00-09:00.
 
-Demo video: https://youtu.be/ouxjoENJtf8
+Demo video: https://youtu.be/UirmULCPkWk
 Code: https://github.com/Hemanth-katariya/chhaanv-heat-shift-planner
 
 ## The stack
